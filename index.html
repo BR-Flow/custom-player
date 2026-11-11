@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body { 
+            width: 100%; 
+            height: 100%; 
+            background: transparent; 
+            overflow: hidden; 
+        }
+        video { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: fill; 
+            display: block;
+            outline: none;
+            border: 0;
+        }
+        video::-webkit-media-controls-fullscreen-button { 
+            display: none !important; 
+        }
+
+        /* Enforce absolute click/tap shield when headless */
+        body.headless,
+        body.headless video {
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            -webkit-touch-callout: none !important;
+        }
+    </style>
+</head>
+<body>
+    <video id="coursePlayer" autoplay loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const videoSrc = urlParams.get('vid');
+        const vttSrc = urlParams.get('sub');
+        const isHeadless = urlParams.get('ui') === '0';
+
+        const player = document.getElementById('coursePlayer');
+
+        if (isHeadless) {
+            document.body.classList.add('headless');
+            player.removeAttribute('controls');
+            player.muted = true;
+            player.autoplay = true;
+            player.loop = true;
+            player.setAttribute('playsinline', '');
+            player.setAttribute('webkit-playsinline', '');
+            player.setAttribute('disablepictureinpicture', '');
+            player.setAttribute('disableremoteplayback', '');
+        } else {
+            player.setAttribute('controls', '');
+        }
+
+        if (videoSrc) {
+            const source = document.createElement('source');
+            source.src = decodeURIComponent(videoSrc);
+            source.type = 'video/mp4';
+            player.appendChild(source);
+
+            player.load();
+            player.play().catch(err => console.warn('Autoplay handled:', err));
+        }
+
+        if (vttSrc && !isHeadless) {
+            const track = document.createElement('track');
+            track.kind = 'captions';
+            track.srclang = 'en';
+            track.label = 'English';
+            track.default = true;
+            track.src = decodeURIComponent(vttSrc);
+            player.appendChild(track);
+        }
+    </script>
+</body>
+</html>
